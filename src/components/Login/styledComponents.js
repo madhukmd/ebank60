@@ -73,3 +73,11 @@ export const LoginButton = styled.button`
   border-radius: 5px;
   margin-top: 30px;
 `
+export const ErrorMessage = styled.p`
+  font-family: 'Roboto';
+  font-size: 12px;
+  color: #ff0b37;
+  margin-top: 5px;
+  font-weight: 600;
+  text-align: center;
+`

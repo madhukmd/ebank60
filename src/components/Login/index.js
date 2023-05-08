@@ -1,4 +1,6 @@
 import {Component} from 'react'
+import Cookies from 'js-cookie'
+import {Redirect} from 'react-router-dom'
 
 import {
   AppContainer,
@@ -10,6 +12,7 @@ import {
   Input,
   FormHeading,
   LoginButton,
+  ErrorMessage,
 } from './styledComponents'
 
 const websiteLogin =
@@ -18,7 +21,9 @@ const websiteLogin =
 class Login extends Component {
   state = {
     userId: '',
-    pin: '',
+    UserPin: '',
+    showError: false,
+    errorMsg: '',
   }
 
   onChangeUserId = event => {
@@ -26,22 +31,35 @@ class Login extends Component {
   }
 
   onChangePin = event => {
-    this.setState({pin: event.target.value})
+    this.setState({UserPin: event.target.value})
+  }
+
+  onSuccess = jwtToken => {
+    const {history} = this.props
+    Cookies.set('jwt_token', jwtToken, {expires: 30})
+    history.replace('/')
+  }
+
+  onFailure = errorMsg => {
+    this.setState({showError: true, errorMsg})
   }
 
   onSubmitForm = async event => {
     event.preventDefault()
-    const {userId, pin} = this.state
-    const userDetails = {userId, pin}
+    const {userId, UserPin} = this.state
+    const userDetails = {user_id: userId, pin: UserPin}
     const url = 'https://apis.ccbp.in/ebank/login'
     const options = {
       method: 'POST',
       body: JSON.stringify(userDetails),
     }
     const response = await fetch(url, options)
-    console.log(response.ok)
     const data = await response.json()
-    console.log(data)
+    if (response.ok === true) {
+      this.onSuccess(data.jwt_token)
+    } else {
+      this.onFailure(data.error_msg)
+    }
   }
 
   renderUserId = () => (
@@ -69,6 +87,12 @@ class Login extends Component {
   )
 
   render() {
+    const {showError, errorMsg} = this.state
+    const jwtToken = Cookies.get('jwt_token')
+    if (jwtToken !== undefined) {
+      return <Redirect to="/" />
+    }
+
     return (
       <AppContainer>
         <LoginContainer>
@@ -78,6 +102,7 @@ class Login extends Component {
             {this.renderUserId()}
             {this.renderPin()}
             <LoginButton type="submit">Login</LoginButton>
+            {showError && <ErrorMessage>{errorMsg}</ErrorMessage>}
           </FormContainer>
         </LoginContainer>
       </AppContainer>
